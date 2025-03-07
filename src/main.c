@@ -14,78 +14,30 @@
 #include "control_law.h"
 #include "joint_state.h"
 
-const uint LED_PIN = 25;
-
-rcl_publisher_t publisher;
-std_msgs__msg__Int32 msg;
-
-void timer_callback(rcl_timer_t *timer, int64_t last_call_time) {
-  rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
-  msg.data++;
-}
+void setup();
+void loop();
 
 int main() {
-  rcl_timer_t timer;
-  rcl_node_t node;
-  rcl_allocator_t allocator;
-  rclc_support_t support;
-  rclc_executor_t executor;
+  setup();
+  loop();
 
-  allocator = rcl_get_default_allocator();
-
-  rcl_ret_t ret = rmw_uros_ping_agent(timeout_ms, attempts);
-
-  if (ret != RCL_RET_OK) {
-    // Unreachable agent, exiting program.
-    return ret;
-  }
-
-  rclc_support_init(&support, 0, NULL, &allocator);
-
-  rclc_node_init_default(&node, "pico_node", "", &support);
-
-  rclc_publisher_init_default(&publisher, &node,
-                              ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-                              "pico_publisher");
-
-  rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(1000), timer_callback);
-
-  rclc_executor_init(&executor, &support.context, 1, &allocator);
-  rclc_executor_add_timer(&executor, &timer);
-
-  while (true) {
-    rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-  }
-  return 0;
+  return EXIT_SUCCESS;
 }
-
-////////////
-
-#define WAIT_ROS_INIT 2000
-#define CALIBRATE_KALMAN_ITERS 10
-#define LOOP_SPIN_CHECK_TIMEOUT_MS 20
-#define CONTROL_LAW_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
-#define JOINT_STATE_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
-
-static HardwareSerial debugSerial(1);
-
-#define DEBUG_TX 22
-#define DEBUG_RX 21
-
-#define REACH_AGENT_TIMEOUT_MS 1000
-#define REACH_AGENT_MAX_ATTEMPTS 150
 
 void setup() {
   rmw_uros_set_custom_transport(
       true, NULL, pico_serial_transport_open, pico_serial_transport_close,
       pico_serial_transport_write, pico_serial_transport_read);
 
-  // Check connection to agent
+  _allocator = rcl_get_default_allocator();
+
   rcl_ret_t ret = rmw_uros_ping_agent(REACH_AGENT_TIMEOUT_MS, REACH_AGENT_MAX_ATTEMPTS);
   if (ret != RCL_RET_OK) {
-    // Unreachable agent, exiting program.
-    return ret;
+    // Unreachable agent, ERR 
+    error_loop();
   }
+
+  rclc_support_init(&_support, 0, NULL, &_allocator);
 
   // Init motors with their interrupts for encoders
   motor1.pwm = MOTOR1_PWM;
@@ -116,9 +68,6 @@ void setup() {
 
   // Joint state config node and timer
   init_joint_state();
-
-  // Call executors to start ROS2 nodes
-  init_micro_ros_nodes();
 
   // For both motors in encoder_a
   init_encoder_interrupt();

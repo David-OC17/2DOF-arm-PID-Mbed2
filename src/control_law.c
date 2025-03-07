@@ -1,8 +1,9 @@
-#include "control_law.h"
-#include "joint_state.h"
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
 #include <std_msgs/msg/float32_multi_array.h>
+
+#include "control_law.h"
+#include "joint_state.h"
 
 rcl_subscription_t _control_law_subscriber;
 rcl_node_t _control_law_node;

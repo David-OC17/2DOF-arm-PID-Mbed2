@@ -12,8 +12,15 @@
 #define ENCODER1_INITAL_POS_DEG 0.0
 #define ENCODER2_INITAL_POS_DEG 0.0
 
-#define ERROR_LED_PIN 30
+#define REACH_AGENT_TIMEOUT_MS 1000
+#define REACH_AGENT_MAX_ATTEMPTS 150
 
+#define CALIBRATE_KALMAN_ITERS 10
+#define LOOP_SPIN_CHECK_TIMEOUT_MS 20
+#define CONTROL_LAW_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
+#define JOINT_STATE_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
+
+// TODO change pins
 #define MOTOR1_PWM 11
 #define MOTOR1_DIR1 25 
 #define MOTOR1_DIR2 25
@@ -25,6 +32,9 @@
 #define MOTOR2_DIR2 19
 #define MOTOR2_ENCODERA 4
 #define MOTOR2_ENCODERB 5 
+
+#define DEBUG_TX 22
+#define DEBUG_RX 21
 
 typedef struct {
   uint8_t pwm;
@@ -74,8 +84,6 @@ extern motor motor2;
     if ((temp_rc != RCL_RET_OK)) {                                             \
     }                                                                          \
   }
-
-void init_micro_ros_nodes();
 
 void error_loop();
 

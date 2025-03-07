@@ -1,6 +1,7 @@
-#include "joint_state.h"
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+
+#include "joint_state.h"
 #include "control_law.h"
 
 rcl_publisher_t _joint_state_publisher;
