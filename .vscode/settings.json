@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "pico_uart_transports.h": "c",
+        "rmw_microros.h": "c",
+        "error_handling.h": "c",
+        "common.h": "c",
+        "joint_state.h": "c",
+        "control_law.h": "c"
+    }
+}
