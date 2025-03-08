@@ -26,7 +26,7 @@ typedef struct {
     float R[2][2];
 } KF_2DOF;
 
-void KF_2DOF_init(KF_2DOF *kf, float dt, float L1, float L2, float Q_noise, float R_noise) {
+static void KF_2DOF_init(KF_2DOF *kf, float dt, float L1, float L2, float Q_noise, float R_noise) {
     kf->dt = dt;
     kf->L1 = L1;
     kf->L2 = L2;
@@ -59,7 +59,7 @@ void KF_2DOF_init(KF_2DOF *kf, float dt, float L1, float L2, float Q_noise, floa
     kf->P[3][0] = 0; kf->P[3][1] = 0; kf->P[3][2] = 0; kf->P[3][3] = 1;
 }
 
-void KF_2DOF_predict(KF_2DOF *kf) {
+static void KF_2DOF_predict(KF_2DOF *kf) {
     // Predict state: x = A * x
     float x_new[4];
     x_new[0] = kf->A[0][0] * kf->x[0] + kf->A[0][2] * kf->x[2];
@@ -81,7 +81,7 @@ void KF_2DOF_predict(KF_2DOF *kf) {
     }
 }
 
-void KF_2DOF_update(KF_2DOF *kf, float theta1, float theta2) {
+static void KF_2DOF_update(KF_2DOF *kf, float theta1, float theta2) {
     // Compute measurement prediction
     float hx[2];
     hx[0] = kf->L1 * cos(theta1) + kf->L2 * cos(theta1 + theta2);
@@ -112,21 +112,20 @@ void KF_2DOF_update(KF_2DOF *kf, float theta1, float theta2) {
     }
 }
 
-float KF_2DOF_getX(KF_2DOF *kf) {
+static float KF_2DOF_getX(KF_2DOF *kf) {
     return kf->x[0];
 }
 
-float KF_2DOF_getY(KF_2DOF *kf) {
+static float KF_2DOF_getY(KF_2DOF *kf) {
     return kf->x[1];
 }
 
-float KF_2DOF_getVX(KF_2DOF *kf) {
+static float KF_2DOF_getVX(KF_2DOF *kf) {
     return kf->x[2];
 }
 
-float KF_2DOF_getVY(KF_2DOF *kf) {
+static float KF_2DOF_getVY(KF_2DOF *kf) {
     return kf->x[3];
 }
-
 
 #endif // __KF_2DOF_H__

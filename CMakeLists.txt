@@ -5,28 +5,31 @@ if(NOT DEFINED ENV{PICO_SDK_PATH})
 endif()
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
-project(pico_micro_ros_example C CXX ASM)
+project(2dof_arm_pid_mbed2 C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
 link_directories(libmicroros)
-add_executable(pico_micro_ros_example
-    pico_micro_ros_example.c
-    pico_uart_transport.c
-
+add_executable(2dof_arm_pid_mbed2
+    src/pico_uart_transport.c
     src/common.c
     src/control_law.c
     src/joint_state.c
+    src/main.c
 )
 
-target_link_libraries(pico_micro_ros_example
+target_link_libraries(2dof_arm_pid_mbed2
     pico_stdlib
     microros
+    hardware_pwm
+    hardware_gpio
+    hardware_irq
+    hardware_clocks
 )
 
-target_include_directories(pico_micro_ros_example PUBLIC
+target_include_directories(2dof_arm_pid_mbed2 PUBLIC
     libmicroros/include
     include/
 )
@@ -36,11 +39,11 @@ SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 
 # Configure Pico
-pico_enable_stdio_usb(pico_micro_ros_example 1)
-pico_enable_stdio_uart(pico_micro_ros_example 0)
+pico_enable_stdio_usb(2dof_arm_pid_mbed2 1)
+pico_enable_stdio_uart(2dof_arm_pid_mbed2 0)
 add_compile_definitions(PICO_UART_ENABLE_CRLF_SUPPORT=0)
 add_compile_definitions(PICO_STDIO_ENABLE_CRLF_SUPPORT=0)
 add_compile_definitions(PICO_STDIO_DEFAULT_CRLF=0)
 
 # Generate UF2
-pico_add_extra_outputs(pico_micro_ros_example)
+pico_add_extra_outputs(2dof_arm_pid_mbed2)

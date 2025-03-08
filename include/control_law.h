@@ -6,7 +6,7 @@
 #include "common.h"
 
 #define MAX_MOTOR_VOLT 12.0
-const float MIN_2MOVE_MOTOR_VOLT = MAX_MOTOR_VOLT * 0.2;
+static const float MIN2MOVE_MOTOR_VOLT = MAX_MOTOR_VOLT * 0.2;
 
 extern rcl_subscription_t _control_law_subscriber;
 extern rcl_node_t _control_law_node;

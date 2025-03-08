@@ -39,9 +39,9 @@ void calibrate_joint_state_kalman(uint8_t iterations) {
   int8_t sign = -1;
 
   for (uint8_t i = 0; i < iterations; i++) {
-    control_motor1(sign * MIN_2MOVE_MOTOR_VOLT);
-    control_motor2(-sign * MIN_2MOVE_MOTOR_VOLT);
-    delay(10); // Allow movement for 10 MS
+    control_motor1(sign * MIN2MOVE_MOTOR_VOLT);
+    control_motor2(-sign * MIN2MOVE_MOTOR_VOLT);
+    sleep_ms(100); // Allow movement for 10 MS
 
     KF_2DOF_update(&joint_state_kalman_filter,
                    _measured_joint_state._joint1_theta,
@@ -121,18 +121,16 @@ void joint_state_timer_callback(rcl_timer_t *timer, int64_t last_call_time) {
 
   _measured_joint_state = take_measurement_encoders();
 
-  // TODO change to new Kalman filter interface
-  // joint_state_kalman_filter.update(_measured_joint_state._joint1_theta,
-  //                                  _measured_joint_state._joint2_theta);
-  // joint_state_kalman_filter.predict();
+  KF_2DOF_update(&joint_state_kalman_filter, _measured_joint_state._joint1_theta, _measured_joint_state._joint2_theta);
+  KF_2DOF_predict(&joint_state_kalman_filter);
 
   // Update position
-  // _estimated_end_efector_state._pos_x = joint_state_kalman_filter.getX();
-  // _estimated_end_efector_state._pos_y = joint_state_kalman_filter.getY();
+  _estimated_end_efector_state._pos_x = KF_2DOF_getX(&joint_state_kalman_filter);
+  _estimated_end_efector_state._pos_y = KF_2DOF_getY(&joint_state_kalman_filter);
 
   // Update velocity
-  // _estimated_end_efector_state._vel_x = joint_state_kalman_filter.getVX();
-  // _estimated_end_efector_state._vel_y = joint_state_kalman_filter.getVY();
+  _estimated_end_efector_state._vel_x = KF_2DOF_getVX(&joint_state_kalman_filter);
+  _estimated_end_efector_state._vel_y = KF_2DOF_getVY(&joint_state_kalman_filter);
 
   // Update ROS msg and publish
   _joint_state_msg.data.data[0] = _estimated_end_efector_state._pos_x;
@@ -167,21 +165,21 @@ void init_joint_state_values(float link1_len, float link2_len) {
 void init_joint_state() {
   // Create node
   RCCHECK(rclc_node_init_default(&_joint_state_node, "joint_state_node", "",
-                                 &_support));
+                                 &_support), __FILE__, __LINE__);
 
   // Create publisher
   RCCHECK(rclc_publisher_init_default(
       &_joint_state_publisher, &_joint_state_node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-      "joint_state_node_publisher"));
+      "joint_state_node_publisher"), __FILE__, __LINE__);
 
   // Create timer
-  RCCHECK(rclc_timer_init_default(&_joint_state_timer, &_support,
+  RCCHECK(rclc_timer_init_default2(&_joint_state_timer, &_support,
                                    RCL_MS_TO_NS(JOINT_STATE_TIMEOUT_MS),
-                                   joint_state_timer_callback));
+                                   joint_state_timer_callback, true), __FILE__, __LINE__);
 
   RCCHECK(rclc_executor_init(&_joint_state_executor, &_support.context, 1,
-                             &_allocator));
+                             &_allocator), __FILE__, __LINE__);
 
-  RCCHECK(rclc_executor_add_timer(&_joint_state_executor, &_joint_state_timer));
+  RCCHECK(rclc_executor_add_timer(&_joint_state_executor, &_joint_state_timer), __FILE__, __LINE__);
 }
