@@ -13,10 +13,16 @@
 #include <rclc/executor.h>
 #include <rclc/rclc.h>
 
+#include <std_msgs/msg/int16_multi_array.h>
+
 #define DEBUG // Comment to enter release mode and disable debug features
 
 #define LINK1_LENGTH_MM 120.0 // Axis to axis
 #define LINK2_LENGTH_MM 88.0  // Axis to planar end-effector phase
+#define ENCODER_REVS_PER_ROT 470
+
+const float clicks2angle(uint16_t clicks);
+const uint16_t angle2clicks(float angle);
 
 #define ENCODER1_INITAL_POS_DEG 0.0
 #define ENCODER2_INITAL_POS_DEG 0.0
@@ -42,14 +48,6 @@
 #define MOTOR2_ENCODERB 22
 
 #define LED_PIN 25
-
-#define DEFAULT_ERROR_MSG "ERROR"
-#define DEFAULT_ERROR_WAIT_MS 1000
-
-#define DEBUG_UART_ID uart0
-#define DEBUG_BAUD_RATE 9600
-#define DEBUG_UART_TX_PIN 0 // GPIO0 (TX)
-#define DEBUG_UART_RX_PIN 1 // GPIO1 (RX)
 
 #define SPI_PORT spi0
 #define SPI_BAUD
@@ -86,11 +84,17 @@ typedef struct {
   float _joint2_theta;
 } joint_state;
 
-extern rclc_executor_t _joint_state_executor;
-extern rclc_executor_t _control_law_executor;
-
+extern rclc_executor_t _executor;
 extern rclc_support_t _support;
 extern rcl_allocator_t _allocator;
+extern rcl_node_t _node;
+
+extern rcl_publisher_t _joint_state_publisher;
+extern std_msgs__msg__Int16MultiArray _joint_state_msg;
+
+extern rcl_subscription_t _control_law_subscriber;
+extern std_msgs__msg__Int16MultiArray _control_law_msg;
+
 
 extern motor motor1;
 extern motor motor2;
@@ -112,13 +116,7 @@ extern motor motor2;
 
 void error_loop();
 
-void init_comms();
-
 void init_spi();
-
-void init_i2c();
-
-void print_debug(const char *msg);
 
 void print_debug_checkpoint(uint8_t val);
 
@@ -130,6 +128,8 @@ void print_debug_checkpoint(uint8_t val);
 #define DEBUG_PRINT(msg)
 #endif
 
-void start_end_blink();
+extern void control_law_callback(const void *msgin);
+
+void init_ros_nodes();
 
 #endif // __COMMON_H__

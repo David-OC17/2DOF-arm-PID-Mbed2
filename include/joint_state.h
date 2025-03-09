@@ -1,18 +1,11 @@
 #ifndef __JOINT_STATE_H__
 #define __JOINT_STATE_H__
 
-#include <std_msgs/msg/float32_multi_array.h>
+#include <std_msgs/msg/int16_multi_array.h>
 
 #include "kf_2dof.h"
 #include "common.h"
 
-extern rcl_publisher_t _joint_state_publisher;
-extern rcl_node_t _joint_state_node;
-extern rcl_timer_t _joint_state_timer;
-extern std_msgs__msg__Float32MultiArray
-    _joint_state_msg;
-
-#define JOINT_STATE_TIMEOUT_MS 1000 // How often joint state is published
 #define ENCODER_INTERRUPT_INTERVAL 1000
 
 static float KALMAN_DT_MS = 0.01; // Time step in ms

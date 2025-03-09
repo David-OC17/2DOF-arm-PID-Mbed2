@@ -1,13 +1,8 @@
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
-#include <std_msgs/msg/float32_multi_array.h>
 
 #include "control_law.h"
 #include "joint_state.h"
-
-rcl_subscription_t _control_law_subscriber;
-rcl_node_t _control_law_node;
-std_msgs__msg__Float32MultiArray _control_law_msg;
 
 motor motor1;
 motor motor2;
@@ -47,30 +42,9 @@ void init_motor(motor m) {
   m.encoder_pos = 1;
 }
 
-/* Create and start start control law subscriber node to spin with timer*/
-void init_control_law() {
-  // Create node
-  RCCHECK(rclc_node_init_default(&_control_law_node, "control_law_node", "",
-                                 &_support));
-
-  // Create subscriber
-  RCCHECK(rclc_subscription_init_default(
-      &_control_law_subscriber, &_control_law_node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-      "control_law_node_subscriber"));
-
-  // Create callback on receive to topic
-  RCCHECK(rclc_executor_add_subscription(
-      &_control_law_executor, &_control_law_subscriber, &_control_law_msg,
-      &control_law_callback, ON_NEW_DATA));
-
-  RCCHECK(rclc_executor_init(&_control_law_executor, &_support.context, 1,
-                             &_allocator));
-}
-
 /* Control law callback on new voltage for motors received from ROS topic */
 void control_law_callback(const void *msgin) {
-  const std_msgs__msg__Float32MultiArray* control_voltages = (const std_msgs__msg__Float32MultiArray *)msgin;
+  const std_msgs__msg__Int16MultiArray* control_voltages = (const std_msgs__msg__Int16MultiArray *)msgin;
 
   // Apply new voltages (new PWM)
   control_motor1(control_voltages->data.data[0]);

@@ -22,7 +22,7 @@ void loop();
 
 int main() {
   setup();
-  // loop();
+  loop();
 
   return EXIT_SUCCESS;
 }
@@ -34,20 +34,12 @@ void setup() {
       true, NULL, pico_serial_transport_open, pico_serial_transport_close,
       pico_serial_transport_write, pico_serial_transport_read);
 
-  _allocator = rcl_get_default_allocator();
-
-  DEBUG_CHECKPOINT(); // 1
-
   rcl_ret_t ret =
       rmw_uros_ping_agent(REACH_AGENT_TIMEOUT_MS, REACH_AGENT_MAX_ATTEMPTS);
   if (ret != RCL_RET_OK) {
     // Unreachable agent, ERR
     error_loop();
   }
-
-  rclc_support_init(&_support, 0, NULL, &_allocator);
-
-  DEBUG_CHECKPOINT(); // 2
 
   // Init motors with their interrupts for encoders
   motor1.pwm = MOTOR1_PWM;
@@ -64,52 +56,28 @@ void setup() {
   motor2.encoder_b = MOTOR2_ENCODERB;
   init_motor(motor2);
 
-  DEBUG_CHECKPOINT(); // 3
-
   // Set to default values
   init_joint_state_values(LINK1_LENGTH_MM, LINK2_LENGTH_MM);
-
-  DEBUG_CHECKPOINT(); // 4
 
   // Init Kalman filter and configure first values
   KF_2DOF_init(&joint_state_kalman_filter, KALMAN_DT_MS, LINK1_LENGTH_MM,
                LINK2_LENGTH_MM, KALMAN_Q_NOISE, KALMAN_R_NOISE);
-  DEBUG_CHECKPOINT(); // 5
   init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
-  DEBUG_CHECKPOINT(); // 6
   // calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
 
-  DEBUG_CHECKPOINT(); // 7
-
-  // Control law config node and timer
-  init_control_law();
-
-  DEBUG_CHECKPOINT(); // 8 
-
-  // Joint state config node and timer
-  init_joint_state();
-
-  DEBUG_CHECKPOINT(); // 9
+  init_ros_nodes();
 
   // For both motors in encoder_a
   init_encoder_interrupt();
-
-  DEBUG_CHECKPOINT(); // 10
 }
 
 void loop() {
-  start_end_blink();
+  static uint8_t iter = 0; 
+  DEBUG_CHECKPOINT(iter++);
 
-  DEBUG_CHECKPOINT();
-
-  // Spin _control_law_executor to update control law from subscription and
-  // send to drivers
+  // Spin to update state (with Kalman belief) and publish and to
+  // to update control law from subscription and send to drivers
   RCSOFTCHECK(rclc_executor_spin_some(
-      &_control_law_executor,
+      &_executor,
       RCL_MS_TO_NS(CONTROL_LAW_EXECUTOR_SPIN_TIMEOUT_MS)));
-
-  // Spin _joint_state_executor to state (with Kalman belief) and publish
-  RCSOFTCHECK(rclc_executor_spin_some(
-      &_joint_state_executor,
-      RCL_MS_TO_NS(JOINT_STATE_EXECUTOR_SPIN_TIMEOUT_MS)));
 }
