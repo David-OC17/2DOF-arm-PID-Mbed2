@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "hardware/gpio.h"
-#include "pico/stdlib.h"
+#include "hardware/spi.h"
 #include "pico/stdlib.h"
 #include "pico_uart_transports.h"
 
@@ -12,6 +12,8 @@
 #include <rcl/rcl.h>
 #include <rclc/executor.h>
 #include <rclc/rclc.h>
+
+#define DEBUG // Comment to enter release mode and disable debug features
 
 #define LINK1_LENGTH_MM 120.0 // Axis to axis
 #define LINK2_LENGTH_MM 88.0  // Axis to planar end-effector phase
@@ -27,26 +29,37 @@
 #define CONTROL_LAW_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
 #define JOINT_STATE_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
 
-#define MOTOR1_PWM 27
-#define MOTOR1_DIR1 26
-#define MOTOR1_DIR2 24
-#define MOTOR1_ENCODERA 22
-#define MOTOR1_ENCODERB 21
+#define MOTOR1_PWM 11
+#define MOTOR1_DIR1 12
+#define MOTOR1_DIR2 13
+#define MOTOR1_ENCODERA 14
+#define MOTOR1_ENCODERB 15
 
-#define MOTOR2_PWM 15
-#define MOTOR2_DIR1 16
-#define MOTOR2_DIR2 17
-#define MOTOR2_ENCODERA 19 
-#define MOTOR2_ENCODERB 20
+#define MOTOR2_PWM 28
+#define MOTOR2_DIR1 21
+#define MOTOR2_DIR2 27
+#define MOTOR2_ENCODERA 26
+#define MOTOR2_ENCODERB 22
 
-#define DEBUG_TX 6
-#define DEBUG_RX 7
-#define DEBUG_BAUD_RATE 9600
+#define LED_PIN 25
 
 #define DEFAULT_ERROR_MSG "ERROR"
 #define DEFAULT_ERROR_WAIT_MS 1000
 
-#define LED_PIN 25
+#define DEBUG_UART_ID uart0
+#define DEBUG_BAUD_RATE 9600
+#define DEBUG_UART_TX_PIN 0 // GPIO0 (TX)
+#define DEBUG_UART_RX_PIN 1 // GPIO1 (RX)
+
+#define SPI_PORT spi0
+#define SPI_BAUD
+#define SPI_CS_PIN 17
+#define SPI_CLK_PIN 18
+#define SPI_MOSI_PIN 19
+
+#define DEBUG_BUF_LEN sizeof("CHECKPOINT 00")
+static uint8_t debug_out_buf[DEBUG_BUF_LEN] = "CHECKPOINT ";
+static uint8_t debug_in_buf[DEBUG_BUF_LEN];
 
 typedef struct {
   uint8_t pwm;
@@ -82,11 +95,11 @@ extern rcl_allocator_t _allocator;
 extern motor motor1;
 extern motor motor2;
 
-#define RCCHECK(fn, file, line)                                                \
+#define RCCHECK(fn)                                                            \
   {                                                                            \
     rcl_ret_t temp_rc = fn;                                                    \
     if ((temp_rc != RCL_RET_OK)) {                                             \
-      error_loop(file, line);                                                  \
+      error_loop();                                                            \
     }                                                                          \
   }
 
@@ -97,11 +110,25 @@ extern motor motor2;
     }                                                                          \
   }
 
-void error_loop(char *file, int32_t line);
+void error_loop();
 
 void init_comms();
 
+void init_spi();
+
+void init_i2c();
+
 void print_debug(const char *msg);
+
+void print_debug_checkpoint(uint8_t val);
+
+#ifdef DEBUG
+#define DEBUG_CHECKPOINT(val) print_debug_checkpoint(val)
+#define DEBUG_PRINT(msg) print_debug(msg)
+#else
+#define DEBUG_CHECKPOINT(file, line)
+#define DEBUG_PRINT(msg)
+#endif
 
 void start_end_blink();
 

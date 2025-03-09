@@ -165,21 +165,21 @@ void init_joint_state_values(float link1_len, float link2_len) {
 void init_joint_state() {
   // Create node
   RCCHECK(rclc_node_init_default(&_joint_state_node, "joint_state_node", "",
-                                 &_support), __FILE__, __LINE__);
+                                 &_support));
 
   // Create publisher
   RCCHECK(rclc_publisher_init_default(
       &_joint_state_publisher, &_joint_state_node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-      "joint_state_node_publisher"), __FILE__, __LINE__);
+      "joint_state_node_publisher"));
 
   // Create timer
   RCCHECK(rclc_timer_init_default2(&_joint_state_timer, &_support,
                                    RCL_MS_TO_NS(JOINT_STATE_TIMEOUT_MS),
-                                   joint_state_timer_callback, true), __FILE__, __LINE__);
+                                   joint_state_timer_callback, true));
 
   RCCHECK(rclc_executor_init(&_joint_state_executor, &_support.context, 1,
-                             &_allocator), __FILE__, __LINE__);
+                             &_allocator));
 
-  RCCHECK(rclc_executor_add_timer(&_joint_state_executor, &_joint_state_timer), __FILE__, __LINE__);
+  RCCHECK(rclc_executor_add_timer(&_joint_state_executor, &_joint_state_timer));
 }

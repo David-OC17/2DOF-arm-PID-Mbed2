@@ -51,21 +51,21 @@ void init_motor(motor m) {
 void init_control_law() {
   // Create node
   RCCHECK(rclc_node_init_default(&_control_law_node, "control_law_node", "",
-                                 &_support), __FILE__, __LINE__);
+                                 &_support));
 
   // Create subscriber
   RCCHECK(rclc_subscription_init_default(
       &_control_law_subscriber, &_control_law_node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-      "control_law_node_subscriber"), __FILE__, __LINE__);
+      "control_law_node_subscriber"));
 
   // Create callback on receive to topic
   RCCHECK(rclc_executor_add_subscription(
       &_control_law_executor, &_control_law_subscriber, &_control_law_msg,
-      &control_law_callback, ON_NEW_DATA), __FILE__, __LINE__);
+      &control_law_callback, ON_NEW_DATA));
 
   RCCHECK(rclc_executor_init(&_control_law_executor, &_support.context, 1,
-                             &_allocator), __FILE__, __LINE__);
+                             &_allocator));
 }
 
 /* Control law callback on new voltage for motors received from ROS topic */
