@@ -70,6 +70,7 @@ void calibrate_joint_state_kalman(uint8_t iterations) {
 
 /* Encoder interrupts */
 void init_encoder_interrupt() {
+  // TODO check IRQ EDGE behaviour
   gpio_set_irq_enabled_with_callback(motor1.encoder_a,
                                      GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
                                      true, &update_encoder_motor1);
@@ -119,11 +120,9 @@ void update_encoder_motor2() {
   }
 }
 
-/* Publish joint state ROS callback*/
-void joint_state_timer_callback(rcl_timer_t *timer, int64_t last_call_time) {
+/* Update Kalman prediction and publish joint state ROS callback*/
+void joint_state_callback() {
   // NOTE the frequency of this callback should match KALMAN_DT_MS timestep
-  RCLC_UNUSED(last_call_time);
-
   _measured_joint_state = take_measurement_encoders();
 
   KF_2DOF_update(&joint_state_kalman_filter,
@@ -154,9 +153,7 @@ void joint_state_timer_callback(rcl_timer_t *timer, int64_t last_call_time) {
   _joint_state_msg.data.data[3] =
       angle2clicks(_estimated_end_efector_state._vel_y);
 
-  if (timer != NULL) {
-    RCSOFTCHECK(rcl_publish(&_joint_state_publisher, &_joint_state_msg, NULL));
-  }
+  RCSOFTCHECK(rcl_publish(&_joint_state_publisher, &_joint_state_msg, NULL));
 }
 
 /* Init joint state */

@@ -32,8 +32,6 @@ const uint16_t angle2clicks(float angle);
 
 #define CALIBRATE_KALMAN_ITERS 10
 #define LOOP_SPIN_CHECK_TIMEOUT_MS 20
-#define CONTROL_LAW_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
-#define JOINT_STATE_EXECUTOR_SPIN_TIMEOUT_MS 5 * LOOP_SPIN_CHECK_TIMEOUT_MS
 
 #define MOTOR1_PWM 11
 #define MOTOR1_DIR1 12
@@ -95,24 +93,8 @@ extern std_msgs__msg__Int16MultiArray _joint_state_msg;
 extern rcl_subscription_t _control_law_subscriber;
 extern std_msgs__msg__Int16MultiArray _control_law_msg;
 
-
 extern motor motor1;
 extern motor motor2;
-
-#define RCCHECK(fn)                                                            \
-  {                                                                            \
-    rcl_ret_t temp_rc = fn;                                                    \
-    if ((temp_rc != RCL_RET_OK)) {                                             \
-      error_loop();                                                            \
-    }                                                                          \
-  }
-
-#define RCSOFTCHECK(fn)                                                        \
-  {                                                                            \
-    rcl_ret_t temp_rc = fn;                                                    \
-    if ((temp_rc != RCL_RET_OK)) {                                             \
-    }                                                                          \
-  }
 
 void error_loop();
 
@@ -131,5 +113,21 @@ void print_debug_checkpoint(uint8_t val);
 extern void control_law_callback(const void *msgin);
 
 void init_ros_nodes();
+
+#define RCCHECK(fn)                                                            \
+  {                                                                            \
+    rcl_ret_t temp_rc = fn;                                                    \
+    if ((temp_rc != RCL_RET_OK)) {                                             \
+      error_loop();                                                            \
+    }                                                                          \
+  }
+
+#define RCSOFTCHECK(fn)                                                        \
+  {                                                                            \
+    rcl_ret_t temp_rc = fn;                                                    \
+    if ((temp_rc != RCL_RET_OK)) {                                             \
+    }                                                                          \
+  }
+
 
 #endif // __COMMON_H__

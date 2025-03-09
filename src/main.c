@@ -72,12 +72,17 @@ void setup() {
 }
 
 void loop() {
-  static uint8_t iter = 0; 
-  DEBUG_CHECKPOINT(iter++);
+  static uint8_t iter = 0;
+  while (1) {
 
-  // Spin to update state (with Kalman belief) and publish and to
-  // to update control law from subscription and send to drivers
-  RCSOFTCHECK(rclc_executor_spin_some(
-      &_executor,
-      RCL_MS_TO_NS(CONTROL_LAW_EXECUTOR_SPIN_TIMEOUT_MS)));
+    // Spin to get new voltages and apply them to drivers
+    // RCSOFTCHECK(rclc_executor_spin_some(
+    //     &_executor, RCL_MS_TO_NS(LOOP_SPIN_CHECK_TIMEOUT_MS)));
+
+    joint_state_callback();
+
+    // Print to notify update
+    DEBUG_CHECKPOINT(iter++);
+    sleep_ms(1000);
+  }
 }

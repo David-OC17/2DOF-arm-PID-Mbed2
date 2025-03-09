@@ -53,16 +53,29 @@ void error_loop() {
   }
 }
 
+#define CONTROL_LAW_MSG_ARRAY_SIZE 2
+#define JOINT_STATE_MSG_ARRAY_SIZE 4
+
 void init_ros_nodes() {
   _allocator = rcl_get_default_allocator();
   rclc_support_init(&_support, 0, NULL, &_allocator);
 
   // Create node
-  RCCHECK(rclc_node_init_default(&_node, "control_law_node", "",
-                                 &_support));
+  RCCHECK(rclc_node_init_default(&_node, "control_law_node", "", &_support));
 
   std_msgs__msg__Int16MultiArray__init(&_control_law_msg);
   std_msgs__msg__Int16MultiArray__init(&_joint_state_msg);
+
+  // Init messages to wanted configuration
+  _joint_state_msg.data.data =
+      (int16_t *)malloc(sizeof(int16_t) * JOINT_STATE_MSG_ARRAY_SIZE);
+  _joint_state_msg.data.size = JOINT_STATE_MSG_ARRAY_SIZE;
+  _joint_state_msg.data.capacity = JOINT_STATE_MSG_ARRAY_SIZE;
+
+  _control_law_msg.data.data =
+      (int16_t *)malloc(sizeof(int16_t) * CONTROL_LAW_MSG_ARRAY_SIZE);
+  _control_law_msg.data.size = CONTROL_LAW_MSG_ARRAY_SIZE;
+  _control_law_msg.data.capacity = CONTROL_LAW_MSG_ARRAY_SIZE;
 
   // Create publisher
   RCCHECK(rclc_publisher_init_default(
@@ -77,11 +90,10 @@ void init_ros_nodes() {
       "control_law_topic"));
 
   // Init executor for 2 nodes
-  RCCHECK(rclc_executor_init(&_executor, &_support.context, 2,
-                             &_allocator));
+  RCCHECK(rclc_executor_init(&_executor, &_support.context, 2, &_allocator));
 
   // Create callback on receive to topic
-  RCCHECK(rclc_executor_add_subscription(
-      &_executor, &_control_law_subscriber, &_control_law_msg,
-      &control_law_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&_executor, &_control_law_subscriber,
+                                         &_control_law_msg,
+                                         &control_law_callback, ON_NEW_DATA));
 }

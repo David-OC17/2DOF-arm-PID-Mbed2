@@ -19,14 +19,13 @@ extern end_efector_state _estimated_end_efector_state;
 
 joint_state take_measurement_encoders();
 
-void init_joint_state();
 void init_joint_state_values(float link1_len, float link2_len);
 void init_joint_state_kalman(float encoder1_init_pos, float encoder2_init_pos);
 void calibrate_joint_state_kalman(uint8_t iterations);
 
 void init_encoder_interrupt();
 
-void joint_state_timer_callback(rcl_timer_t *timer, int64_t last_call_time);
+void joint_state_callback();
 void update_encoder_motor1();
 void update_encoder_motor2();
 
