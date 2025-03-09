@@ -44,7 +44,9 @@ void init_motor(motor m) {
 
 /* Control law callback on new voltage for motors received from ROS topic */
 void control_law_callback(const void *msgin) {
-  const std_msgs__msg__Int16MultiArray* control_voltages = (const std_msgs__msg__Int16MultiArray *)msgin;
+  const std_msgs__msg__Float32MultiArray* control_voltages = (const std_msgs__msg__Float32MultiArray *)msgin;
+
+  DEBUG_SUBSCRIBER_PRINT();
 
   // Apply new voltages (new PWM)
   control_motor1(control_voltages->data.data[0]);

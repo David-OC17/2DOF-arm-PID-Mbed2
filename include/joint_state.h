@@ -1,8 +1,6 @@
 #ifndef __JOINT_STATE_H__
 #define __JOINT_STATE_H__
 
-#include <std_msgs/msg/int16_multi_array.h>
-
 #include "kf_2dof.h"
 #include "common.h"
 

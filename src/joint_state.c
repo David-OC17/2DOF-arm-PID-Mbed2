@@ -29,7 +29,7 @@ void init_joint_state_kalman(float encoder1_init_pos, float encoder2_init_pos) {
 /* Vibrate motors and update-predict Kalman filter multiple times to stabilize K
  * matrix */
 void calibrate_joint_state_kalman(uint8_t iterations) {
-  int8_t sign = -1;
+  float sign = -1.0;
 
   for (uint8_t i = 0; i < iterations; i++) {
     control_motor1(sign * MIN2MOVE_MOTOR_VOLT);
@@ -58,14 +58,14 @@ void calibrate_joint_state_kalman(uint8_t iterations) {
 
   // Update ROS msg and publish
   _joint_state_msg.data.data[0] =
-      angle2clicks(_estimated_end_efector_state._pos_x);
+      _estimated_end_efector_state._pos_x;
   _joint_state_msg.data.data[1] =
-      angle2clicks(_estimated_end_efector_state._pos_y);
+      _estimated_end_efector_state._pos_y;
 
   _joint_state_msg.data.data[2] =
-      angle2clicks(_estimated_end_efector_state._vel_x);
+      _estimated_end_efector_state._vel_x;
   _joint_state_msg.data.data[3] =
-      angle2clicks(_estimated_end_efector_state._vel_y);
+      _estimated_end_efector_state._vel_y;
 }
 
 /* Encoder interrupts */
@@ -81,8 +81,8 @@ void init_encoder_interrupt() {
 
 /* Encoder interrupts callbacks */
 void update_encoder_motor1() {
-  int encoder_a_state = gpio_get(motor1.encoder_a);
-  int encoder_b_state = gpio_get(motor1.encoder_b);
+  int8_t encoder_a_state = gpio_get(motor1.encoder_a);
+  int8_t encoder_b_state = gpio_get(motor1.encoder_b);
 
   // Determine direction of rotation
   if (encoder_a_state == 1) {   // HIGH
@@ -101,8 +101,8 @@ void update_encoder_motor1() {
 }
 
 void update_encoder_motor2() {
-  int encoder_a_state = gpio_get(motor2.encoder_a);
-  int encoder_b_state = gpio_get(motor2.encoder_b);
+  int8_t encoder_a_state = gpio_get(motor2.encoder_a);
+  int8_t encoder_b_state = gpio_get(motor2.encoder_b);
 
   // Determine direction of rotation
   if (encoder_a_state == 1) {   // HIGH
@@ -143,20 +143,17 @@ void joint_state_callback() {
       KF_2DOF_getVY(&joint_state_kalman_filter);
 
   // Update ROS msg and publish
-  _joint_state_msg.data.data[0] =
-      angle2clicks(_estimated_end_efector_state._pos_x);
-  _joint_state_msg.data.data[1] =
-      angle2clicks(_estimated_end_efector_state._pos_y);
+  _joint_state_msg.data.data[0] = _estimated_end_efector_state._pos_x;
+  _joint_state_msg.data.data[1] = _estimated_end_efector_state._pos_y;
 
-  _joint_state_msg.data.data[2] =
-      angle2clicks(_estimated_end_efector_state._vel_x);
-  _joint_state_msg.data.data[3] =
-      angle2clicks(_estimated_end_efector_state._vel_y);
+  _joint_state_msg.data.data[2] = _estimated_end_efector_state._vel_x;
+  _joint_state_msg.data.data[3] = _estimated_end_efector_state._vel_y;
 
   RCSOFTCHECK(rcl_publish(&_joint_state_publisher, &_joint_state_msg, NULL));
+  DEBUG_PUBLISHER_PRINT();
 }
 
-/* Init joint state */
+/* Init joint state to stationary and horizontal right*/
 void init_joint_state_values(float link1_len, float link2_len) {
   // Initially both motors at 90deg and stationary
   _estimated_end_efector_state._pos_x = link1_len + link2_len;
@@ -167,12 +164,12 @@ void init_joint_state_values(float link1_len, float link2_len) {
 
   // Init value of msg
   _joint_state_msg.data.data[0] =
-      angle2clicks(_estimated_end_efector_state._pos_x);
+      _estimated_end_efector_state._pos_x;
   _joint_state_msg.data.data[1] =
-      angle2clicks(_estimated_end_efector_state._pos_y);
+      _estimated_end_efector_state._pos_y;
 
   _joint_state_msg.data.data[2] =
-      angle2clicks(_estimated_end_efector_state._vel_x);
+      _estimated_end_efector_state._vel_x;
   _joint_state_msg.data.data[3] =
-      angle2clicks(_estimated_end_efector_state._vel_y);
+      _estimated_end_efector_state._vel_y;
 }

@@ -26,6 +26,7 @@ typedef struct {
     float R[2][2];
 } KF_2DOF;
 
+// TODO change matrix values to match state space representation
 static void KF_2DOF_init(KF_2DOF *kf, float dt, float L1, float L2, float Q_noise, float R_noise) {
     kf->dt = dt;
     kf->L1 = L1;
@@ -33,11 +34,12 @@ static void KF_2DOF_init(KF_2DOF *kf, float dt, float L1, float L2, float Q_nois
     kf->Q_noise = Q_noise;
     kf->R_noise = R_noise;
 
+    // clang-format off
     // Init A matrix
     kf->A[0][0] = 1; kf->A[0][1] = 0; kf->A[0][2] = dt; kf->A[0][3] = 0;
-    kf->A[1][0] = 0; kf->A[1][1] = 1; kf->A[1][2] = 0; kf->A[1][3] = dt;
-    kf->A[2][0] = 0; kf->A[2][1] = 0; kf->A[2][2] = 1; kf->A[2][3] = 0;
-    kf->A[3][0] = 0; kf->A[3][1] = 0; kf->A[3][2] = 0; kf->A[3][3] = 1;
+    kf->A[1][0] = 0; kf->A[1][1] = 1; kf->A[1][2] = 0;  kf->A[1][3] = dt;
+    kf->A[2][0] = 0; kf->A[2][1] = 0; kf->A[2][2] = 1;  kf->A[2][3] = 0;
+    kf->A[3][0] = 0; kf->A[3][1] = 0; kf->A[3][2] = 0;  kf->A[3][3] = 1;
 
     // Init covariance Q matrix
     kf->Q[0][0] = Q_noise; kf->Q[0][1] = 0;       kf->Q[0][2] = 0;       kf->Q[0][3] = 0;
@@ -57,6 +59,7 @@ static void KF_2DOF_init(KF_2DOF *kf, float dt, float L1, float L2, float Q_nois
     kf->P[1][0] = 0; kf->P[1][1] = 1; kf->P[1][2] = 0; kf->P[1][3] = 0;
     kf->P[2][0] = 0; kf->P[2][1] = 0; kf->P[2][2] = 1; kf->P[2][3] = 0;
     kf->P[3][0] = 0; kf->P[3][1] = 0; kf->P[3][2] = 0; kf->P[3][3] = 1;
+    // clang-format on
 }
 
 static void KF_2DOF_predict(KF_2DOF *kf) {
@@ -67,11 +70,11 @@ static void KF_2DOF_predict(KF_2DOF *kf) {
     x_new[2] = kf->x[2];
     x_new[3] = kf->x[3];
 
+    // clang-format off
     // Update state vector
-    kf->x[0] = x_new[0];
-    kf->x[1] = x_new[1];
-    kf->x[2] = x_new[2];
-    kf->x[3] = x_new[3];
+    kf->x[0] = x_new[0]; kf->x[1] = x_new[1];
+    kf->x[2] = x_new[2]; kf->x[3] = x_new[3];
+    // clang-format on
 
     // Predict covariance: P = A * P * A^T + Q
     for (int i = 0; i < 4; i++) {

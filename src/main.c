@@ -1,21 +1,6 @@
-#include <stdio.h>
-
-#include <rcl/error_handling.h>
-#include <rcl/rcl.h>
-#include <rclc/executor.h>
-#include <rclc/rclc.h>
-#include <rmw_microros/rmw_microros.h>
-#include <std_msgs/msg/int32.h>
-
 #include "common.h"
 #include "control_law.h"
 #include "joint_state.h"
-/////////////////
-#include "hardware/spi.h"
-#include "pico/stdlib.h"
-#include <stdio.h>
-
-#define BUF_LEN 0x100
 
 void setup();
 void loop();
@@ -56,6 +41,8 @@ void setup() {
   motor2.encoder_b = MOTOR2_ENCODERB;
   init_motor(motor2);
 
+  init_ros_nodes();
+
   // Set to default values
   init_joint_state_values(LINK1_LENGTH_MM, LINK2_LENGTH_MM);
 
@@ -63,9 +50,7 @@ void setup() {
   KF_2DOF_init(&joint_state_kalman_filter, KALMAN_DT_MS, LINK1_LENGTH_MM,
                LINK2_LENGTH_MM, KALMAN_Q_NOISE, KALMAN_R_NOISE);
   init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
-  // calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
-
-  init_ros_nodes();
+  calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
 
   // For both motors in encoder_a
   init_encoder_interrupt();
@@ -74,14 +59,14 @@ void setup() {
 void loop() {
   static uint8_t iter = 0;
   while (1) {
-
-    // Spin to get new voltages and apply them to drivers
-    // RCSOFTCHECK(rclc_executor_spin_some(
-    //     &_executor, RCL_MS_TO_NS(LOOP_SPIN_CHECK_TIMEOUT_MS)));
+    // TODO check this works
+    if (rcl_take(&_control_law_subscriber, &_control_law_msg, &_control_law_msg_info, NULL) == RCL_RET_OK) {
+      control_motor1(_control_law_msg.data.data[0]);
+      control_motor2(_control_law_msg.data.data[1]);
+    }
 
     joint_state_callback();
 
-    // Print to notify update
     DEBUG_CHECKPOINT(iter++);
     sleep_ms(1000);
   }

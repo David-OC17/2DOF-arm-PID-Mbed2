@@ -9,18 +9,18 @@ rcl_allocator_t _allocator;
 rcl_node_t _node;
 
 rcl_subscription_t _control_law_subscriber;
-// rcl_node_t _control_law_node;
-std_msgs__msg__Int16MultiArray _control_law_msg;
+rmw_message_info_t _control_law_msg_info;
+std_msgs__msg__Float32MultiArray _control_law_msg;
 
 rcl_publisher_t _joint_state_publisher;
-std_msgs__msg__Int16MultiArray _joint_state_msg;
+std_msgs__msg__Float32MultiArray _joint_state_msg;
 
 const float clicks2angle(uint16_t clicks) {
   return (float)(clicks * (uint16_t)360 / (uint16_t)ENCODER_REVS_PER_ROT);
 }
 
-const uint16_t angle2clicks(float angle) {
-  return (uint16_t)(angle / (float)360.0 * (float)ENCODER_REVS_PER_ROT);
+const int16_t angle2clicks(float angle) {
+  return (int16_t)(angle / (float)360.0 * (float)ENCODER_REVS_PER_ROT);
 }
 
 void init_spi() {
@@ -40,8 +40,33 @@ void print_debug_checkpoint(uint8_t val) {
     debug_out_buf[10 + i] = checkpoint_str[i]; // Position after "CHECKPOINT "
   }
 
-  spi_write_read_blocking(spi_default, debug_out_buf, debug_in_buf,
+  spi_write_read_blocking(spi_default, debug_out_buf, debug_response_buf,
                           DEBUG_BUF_LEN);
+}
+
+void print_debug_publisher() {
+    float pos_x = _joint_state_msg.data.data[0];
+    float pos_y = _joint_state_msg.data.data[1];
+    float vel_x = _joint_state_msg.data.data[2];
+    float vel_y = _joint_state_msg.data.data[3];
+
+    snprintf((char*)debug_print_publisher_buf, DEBUG_PRINT_SUBSCRIBER_BUF_LEN, 
+             "JOINT STATE - POSX: %.2f, POSY: %.2f, VELX: %.2f, VELY: %.2f", 
+             pos_x, pos_y, vel_x, vel_y);
+
+    spi_write_read_blocking(spi_default, debug_print_publisher_buf, debug_response_buf, DEBUG_PRINT_SUBSCRIBER_BUF_LEN);
+}
+
+
+void print_debug_subscriber() {
+    float volt_1 = _control_law_msg.data.data[0];
+    float volt_2 = _control_law_msg.data.data[1];
+
+    snprintf((char*)debug_print_subscriber_buf, DEBUG_PRINT_SUBSCRIBER_BUF_LEN, 
+             "SUBSCRIBER VOLT1: %.2f, VOLT2: %.2f", 
+             volt_1, volt_2);
+
+    spi_write_read_blocking(spi_default, debug_print_subscriber_buf, debug_response_buf, DEBUG_PRINT_SUBSCRIBER_BUF_LEN);
 }
 
 void error_loop() {
@@ -63,30 +88,30 @@ void init_ros_nodes() {
   // Create node
   RCCHECK(rclc_node_init_default(&_node, "control_law_node", "", &_support));
 
-  std_msgs__msg__Int16MultiArray__init(&_control_law_msg);
-  std_msgs__msg__Int16MultiArray__init(&_joint_state_msg);
+  std_msgs__msg__Float32MultiArray__init(&_control_law_msg);
+  std_msgs__msg__Float32MultiArray__init(&_joint_state_msg);
 
   // Init messages to wanted configuration
   _joint_state_msg.data.data =
-      (int16_t *)malloc(sizeof(int16_t) * JOINT_STATE_MSG_ARRAY_SIZE);
+      (float *)malloc(sizeof(float) * JOINT_STATE_MSG_ARRAY_SIZE);
   _joint_state_msg.data.size = JOINT_STATE_MSG_ARRAY_SIZE;
   _joint_state_msg.data.capacity = JOINT_STATE_MSG_ARRAY_SIZE;
 
   _control_law_msg.data.data =
-      (int16_t *)malloc(sizeof(int16_t) * CONTROL_LAW_MSG_ARRAY_SIZE);
+      (float *)malloc(sizeof(float) * CONTROL_LAW_MSG_ARRAY_SIZE);
   _control_law_msg.data.size = CONTROL_LAW_MSG_ARRAY_SIZE;
   _control_law_msg.data.capacity = CONTROL_LAW_MSG_ARRAY_SIZE;
 
   // Create publisher
   RCCHECK(rclc_publisher_init_default(
       &_joint_state_publisher, &_node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
       "joint_state_topic"));
 
   // Create subscriber
   RCCHECK(rclc_subscription_init_default(
       &_control_law_subscriber, &_node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
       "control_law_topic"));
 
   // Init executor for 2 nodes
