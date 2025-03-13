@@ -5,6 +5,16 @@
         "error_handling.h": "c",
         "common.h": "c",
         "joint_state.h": "c",
-        "control_law.h": "c"
+        "control_law.h": "c",
+        "cstdlib": "c",
+        "kf_2dof.h": "c",
+        "math.h": "c",
+        "gpio.h": "c",
+        "executor.h": "c",
+        "float32_multi_array.h": "c",
+        "*.tcc": "c",
+        "memory": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c"
     }
 }

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include "hardware/pwm.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include "pico/stdlib.h"
@@ -61,14 +62,14 @@ static uint8_t debug_print_publisher_buf[DEBUG_PRINT_PUBLISHER_BUF_LEN];
 static uint8_t debug_response_buf[DEBUG_PRINT_SUBSCRIBER_BUF_LEN];
 
 typedef struct {
-  uint8_t pwm;
-  uint8_t dir1;
-  uint8_t dir2;
+  uint pwm;
+  uint dir1;
+  uint dir2;
 
-  uint8_t encoder_a;
-  uint8_t encoder_b;
+  uint encoder_a;
+  uint encoder_b;
 
-  volatile uint32_t encoder_pos;
+  volatile int32_t encoder_pos;
 } motor;
 
 typedef struct {

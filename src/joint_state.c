@@ -1,6 +1,3 @@
-#include "hardware/gpio.h"
-#include "pico/stdlib.h"
-
 #include "control_law.h"
 #include "joint_state.h"
 
@@ -11,8 +8,8 @@ end_efector_state _estimated_end_efector_state;
 joint_state take_measurement_encoders() {
   joint_state temp_state;
 
-  temp_state._joint1_theta = clicks2angle(motor1.encoder_pos);
-  temp_state._joint2_theta = clicks2angle(motor2.encoder_pos);
+  temp_state._joint1_theta = clicks2angle((uint16_t)motor1.encoder_pos);
+  temp_state._joint2_theta = clicks2angle((uint16_t)motor2.encoder_pos);
 
   return temp_state;
 }
@@ -57,72 +54,42 @@ void calibrate_joint_state_kalman(uint8_t iterations) {
       KF_2DOF_getVY(&joint_state_kalman_filter);
 
   // Update ROS msg and publish
-  _joint_state_msg.data.data[0] =
-      _estimated_end_efector_state._pos_x;
-  _joint_state_msg.data.data[1] =
-      _estimated_end_efector_state._pos_y;
+  _joint_state_msg.data.data[0] = _estimated_end_efector_state._pos_x;
+  _joint_state_msg.data.data[1] = _estimated_end_efector_state._pos_y;
 
-  _joint_state_msg.data.data[2] =
-      _estimated_end_efector_state._vel_x;
-  _joint_state_msg.data.data[3] =
-      _estimated_end_efector_state._vel_y;
+  _joint_state_msg.data.data[2] = _estimated_end_efector_state._vel_x;
+  _joint_state_msg.data.data[3] = _estimated_end_efector_state._vel_y;
 }
 
 /* Encoder interrupts */
 void init_encoder_interrupt() {
-  // TODO check IRQ EDGE behaviour
+  uint32_t event_mask = GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE;
+
   gpio_set_irq_enabled_with_callback(motor1.encoder_a,
-                                     GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
-                                     true, &update_encoder_motor1);
-  gpio_set_irq_enabled_with_callback(motor2.encoder_a,
-                                     GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
-                                     true, &update_encoder_motor2);
+                                     event_mask,
+                                     true, &update_encoder_motor);
 }
 
 /* Encoder interrupts callbacks */
-void update_encoder_motor1() {
-  int8_t encoder_a_state = gpio_get(motor1.encoder_a);
-  int8_t encoder_b_state = gpio_get(motor1.encoder_b);
+void update_encoder_motor(uint gpio, uint32_t events) {
+  if (gpio == motor1.encoder_a) {
+    bool encoder_a_state = gpio_get(motor1.encoder_a);
+    bool encoder_b_state = gpio_get(motor1.encoder_b);
 
-  // Determine direction of rotation
-  if (encoder_a_state == 1) {   // HIGH
-    if (encoder_b_state == 0) { // LOW
-      motor1.encoder_pos++;
-    } else {
-      motor1.encoder_pos--;
-    }
-  } else {
-    if (encoder_b_state == 0) { // LOW
-      motor1.encoder_pos--;
-    } else {
-      motor1.encoder_pos++;
-    }
+    motor1.encoder_pos += (encoder_a_state == encoder_b_state) ? 1 : -1;
+    DEBUG_CHECKPOINT(1);
   }
-}
+  else if (gpio == motor2.encoder_a) {
+    bool encoder_a_state = gpio_get(motor2.encoder_a);
+    bool encoder_b_state = gpio_get(motor2.encoder_b);
 
-void update_encoder_motor2() {
-  int8_t encoder_a_state = gpio_get(motor2.encoder_a);
-  int8_t encoder_b_state = gpio_get(motor2.encoder_b);
-
-  // Determine direction of rotation
-  if (encoder_a_state == 1) {   // HIGH
-    if (encoder_b_state == 0) { // LOW
-      motor2.encoder_pos++;
-    } else {
-      motor2.encoder_pos--;
-    }
-  } else {
-    if (encoder_b_state == 0) { // LOW
-      motor2.encoder_pos--;
-    } else {
-      motor2.encoder_pos++;
-    }
+    motor2.encoder_pos += (encoder_a_state == encoder_b_state) ? 1 : -1;
+    DEBUG_CHECKPOINT(2);
   }
 }
 
 /* Update Kalman prediction and publish joint state ROS callback*/
 void joint_state_callback() {
-  // NOTE the frequency of this callback should match KALMAN_DT_MS timestep
   _measured_joint_state = take_measurement_encoders();
 
   KF_2DOF_update(&joint_state_kalman_filter,
@@ -163,13 +130,9 @@ void init_joint_state_values(float link1_len, float link2_len) {
   _estimated_end_efector_state._vel_y = 0; // Stationary
 
   // Init value of msg
-  _joint_state_msg.data.data[0] =
-      _estimated_end_efector_state._pos_x;
-  _joint_state_msg.data.data[1] =
-      _estimated_end_efector_state._pos_y;
+  _joint_state_msg.data.data[0] = _estimated_end_efector_state._pos_x;
+  _joint_state_msg.data.data[1] = _estimated_end_efector_state._pos_y;
 
-  _joint_state_msg.data.data[2] =
-      _estimated_end_efector_state._vel_x;
-  _joint_state_msg.data.data[3] =
-      _estimated_end_efector_state._vel_y;
+  _joint_state_msg.data.data[2] = _estimated_end_efector_state._vel_x;
+  _joint_state_msg.data.data[3] = _estimated_end_efector_state._vel_y;
 }

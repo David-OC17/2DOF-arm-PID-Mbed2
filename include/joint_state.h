@@ -24,7 +24,6 @@ void calibrate_joint_state_kalman(uint8_t iterations);
 void init_encoder_interrupt();
 
 void joint_state_callback();
-void update_encoder_motor1();
-void update_encoder_motor2();
+void update_encoder_motor(uint gpio, uint32_t events);
 
 #endif // __JOINT_STATE_H__

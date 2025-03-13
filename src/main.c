@@ -1,19 +1,24 @@
 #include "common.h"
 #include "control_law.h"
 #include "joint_state.h"
+#include "testing_routines.h"
 
 void setup();
 void loop();
 
 int main() {
-  setup();
-  loop();
+  // TEST_pwm_output();
+  // TEST_encoder_count_print();
 
-  return EXIT_SUCCESS;
+  // setup();
+  // loop();
+
+  return 0;
 }
 
 void setup() {
   init_spi();
+  stdio_init_all();
 
   rmw_uros_set_custom_transport(
       true, NULL, pico_serial_transport_open, pico_serial_transport_close,
@@ -22,7 +27,7 @@ void setup() {
   rcl_ret_t ret =
       rmw_uros_ping_agent(REACH_AGENT_TIMEOUT_MS, REACH_AGENT_MAX_ATTEMPTS);
   if (ret != RCL_RET_OK) {
-    // Unreachable agent, ERR
+    // Unreachable agent
     error_loop();
   }
 
@@ -60,7 +65,8 @@ void loop() {
   static uint8_t iter = 0;
   while (1) {
     // TODO check this works
-    if (rcl_take(&_control_law_subscriber, &_control_law_msg, &_control_law_msg_info, NULL) == RCL_RET_OK) {
+    if (rcl_take(&_control_law_subscriber, &_control_law_msg,
+                 &_control_law_msg_info, NULL) == RCL_RET_OK) {
       control_motor1(_control_law_msg.data.data[0]);
       control_motor2(_control_law_msg.data.data[1]);
     }
