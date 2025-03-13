@@ -8,6 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 project(2dof_arm_pid_mbed2 C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+set(CMSIS_PATH "/home/david/CMSIS")
 
 pico_sdk_init()
 
@@ -28,12 +29,14 @@ target_link_libraries(2dof_arm_pid_mbed2
     hardware_irq
     hardware_clocks
     hardware_spi
-    # arm_math
+    /home/david/CMSIS/build/bin_dsp/libCMSISDSP.a
 )
 
 target_include_directories(2dof_arm_pid_mbed2 PUBLIC
     libmicroros/include
     include/
+    ${CMSIS_PATH}/CMSIS-DSP/Include
+    ${CMSIS_PATH}/CMSIS_6/CMSIS/Core/Include/
 )
 
 # Optimize binary size

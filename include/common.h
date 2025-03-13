@@ -23,14 +23,13 @@
 #define LINK2_LENGTH_MM 88.0  // Axis to planar end-effector phase
 #define ENCODER_REVS_PER_ROT 470
 
-#define ENCODER1_INITAL_POS_DEG 0.0
-#define ENCODER2_INITAL_POS_DEG 0.0
+#define ENCODER1_INITAL_POS_DEG 0.0f
+#define ENCODER2_INITAL_POS_DEG 0.0f
 
 #define REACH_AGENT_TIMEOUT_MS 1000
 #define REACH_AGENT_MAX_ATTEMPTS 150
 
 #define CALIBRATE_KALMAN_ITERS 10
-#define LOOP_SPIN_CHECK_TIMEOUT_MS 20
 
 #define CONTROL_LAW_MSG_ARRAY_SIZE 2
 #define JOINT_STATE_MSG_ARRAY_SIZE 4
@@ -76,17 +75,17 @@ typedef struct {
 } motor;
 
 typedef struct {
-  float _pos_x;
-  float _pos_y;
+  float joint1_theta;
+  float joint2_theta;
 
-  float _vel_x;
-  float _vel_y;
-} end_efector_state;
+  float joint1_omega;
+  float joint2_omega;
+} full_joint_state;
 
 // Consider jointN to be the Nth joint starting from the base
 typedef struct {
-  float _joint1_theta;
-  float _joint2_theta;
+  float joint1_theta;
+  float joint2_theta;
 } joint_state;
 
 extern rclc_executor_t _executor;

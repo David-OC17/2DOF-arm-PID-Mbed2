@@ -54,10 +54,8 @@ void setup() {
   init_joint_state_values(LINK1_LENGTH_MM, LINK2_LENGTH_MM);
 
   // Init Kalman filter and configure first values
-  // KF_2DOF_init(&joint_state_kalman_filter, KALMAN_DT_MS, LINK1_LENGTH_MM,
-  //              LINK2_LENGTH_MM, KALMAN_Q_NOISE, KALMAN_R_NOISE);
-  // init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
-  // calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
+  init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
+  calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
 }
 
 void loop() {

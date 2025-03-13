@@ -10,10 +10,11 @@ static float KALMAN_DT_MS = 0.01; // Time step in ms
 static float KALMAN_Q_NOISE = 0.001; // Process noise (control - motor driver)
 static float KALMAN_R_NOISE = 0.1; // Measurement noise (encoders)
 
-static KF_2DOF joint_state_kalman_filter;
+extern KF_2DOF_t _joint1_kalman_filter;
+extern KF_2DOF_t _joint2_kalman_filter;
 
 extern joint_state _measured_joint_state;
-extern end_efector_state _estimated_end_efector_state;
+extern full_joint_state _approximate_joint_state;
 
 joint_state take_measurement_encoders();
 

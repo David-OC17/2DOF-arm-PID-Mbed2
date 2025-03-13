@@ -47,31 +47,49 @@ void control_law_callback(const void *msgin) {
 
 /* Call to motor driver action */
 void control_motor1(float volt) {
-  // Positive voltage
-  if (volt > 0) {
-    gpio_put(motor1.dir1, true);
-    gpio_put(motor1.dir2, false);
+  if (volt < -200 || volt > 200) {
+    if (volt < 0) { // Negative rotation
+      gpio_put(motor1.dir1, false);
+      gpio_put(motor1.dir2, true);
+      pwm_set_gpio_level(motor1.pwm, 255);
+    } else {
+      gpio_put(motor1.dir1, true);
+      gpio_put(motor1.dir2, false);
+      pwm_set_gpio_level(motor1.pwm, 255);
+    }
   } else {
-    // Negative voltage
-    gpio_put(motor1.dir1, false);
-    gpio_put(motor1.dir2, true);
+    bool sign = volt < 0 ? 0 : 1;
+    volt = abs(volt);
+
+    gpio_put(motor1.dir1, sign);
+    gpio_put(motor1.dir2, !sign);
+
+    uint16_t duty_cycle = volt / 200 * 255;
+    pwm_set_gpio_level(motor1.pwm, duty_cycle);
   }
-  const int16_t duty_cycle = 255/4; // TODO calculate duty cycle
-  pwm_set_gpio_level(motor1.pwm, duty_cycle);
   sleep_ms(1);
 }
 
 void control_motor2(float volt) {
-  // Positive voltage
-  if (volt > 0) {
-    gpio_put(motor1.dir1, true);
-    gpio_put(motor1.dir2, false);
+  if (volt < -200 || volt > 200) {
+    if (volt < 0) { // Negative rotation
+      gpio_put(motor2.dir1, false);
+      gpio_put(motor2.dir2, true);
+      pwm_set_gpio_level(motor2.pwm, 255);
+    } else {
+      gpio_put(motor2.dir1, true);
+      gpio_put(motor2.dir2, false);
+      pwm_set_gpio_level(motor2.pwm, 255);
+    }
   } else {
-    // Negative voltage
-    gpio_put(motor1.dir1, false);
-    gpio_put(motor1.dir2, true);
+    bool sign = volt < 0 ? 0 : 1;
+    volt = abs(volt);
+
+    gpio_put(motor2.dir1, sign);
+    gpio_put(motor2.dir2, !sign);
+
+    uint16_t duty_cycle = volt / 200 * 255;
+    pwm_set_gpio_level(motor2.pwm, duty_cycle);
   }
-  const int16_t duty_cycle = 255/4; // TODO calculate duty cycle
-  pwm_set_gpio_level(motor1.pwm, duty_cycle);
   sleep_ms(1);
 }
