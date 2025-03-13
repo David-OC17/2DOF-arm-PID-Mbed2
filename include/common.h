@@ -32,6 +32,9 @@
 #define CALIBRATE_KALMAN_ITERS 10
 #define LOOP_SPIN_CHECK_TIMEOUT_MS 20
 
+#define CONTROL_LAW_MSG_ARRAY_SIZE 2
+#define JOINT_STATE_MSG_ARRAY_SIZE 4
+
 #define MOTOR1_PWM 11
 #define MOTOR1_DIR1 12
 #define MOTOR1_DIR2 13
@@ -101,7 +104,7 @@ extern rmw_message_info_t _control_law_msg_info;
 extern motor motor1;
 extern motor motor2;
 
-const float clicks2angle(uint16_t clicks);
+const float clicks2angle(int32_t clicks);
 const int16_t angle2clicks(float angle);
 
 void error_loop();

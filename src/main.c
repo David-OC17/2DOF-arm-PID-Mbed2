@@ -9,9 +9,10 @@ void loop();
 int main() {
   // TEST_pwm_output();
   // TEST_encoder_count_print();
+  // TEST_voltage_control_ros_subscribe();
 
-  // setup();
-  // loop();
+  setup();
+  loop();
 
   return 0;
 }
@@ -20,18 +21,6 @@ void setup() {
   init_spi();
   stdio_init_all();
 
-  rmw_uros_set_custom_transport(
-      true, NULL, pico_serial_transport_open, pico_serial_transport_close,
-      pico_serial_transport_write, pico_serial_transport_read);
-
-  rcl_ret_t ret =
-      rmw_uros_ping_agent(REACH_AGENT_TIMEOUT_MS, REACH_AGENT_MAX_ATTEMPTS);
-  if (ret != RCL_RET_OK) {
-    // Unreachable agent
-    error_loop();
-  }
-
-  // Init motors with their interrupts for encoders
   motor1.pwm = MOTOR1_PWM;
   motor1.dir1 = MOTOR1_DIR1;
   motor1.dir2 = MOTOR1_DIR2;
@@ -46,34 +35,36 @@ void setup() {
   motor2.encoder_b = MOTOR2_ENCODERB;
   init_motor(motor2);
 
+  rmw_uros_set_custom_transport(
+      true, NULL, pico_serial_transport_open, pico_serial_transport_close,
+      pico_serial_transport_write, pico_serial_transport_read);
+
+  rcl_ret_t ret =
+      rmw_uros_ping_agent(REACH_AGENT_TIMEOUT_MS, REACH_AGENT_MAX_ATTEMPTS);
+  if (ret != RCL_RET_OK) {
+    // Unreachable agent
+    error_loop();
+  }
+
+  init_encoder_interrupt();
+
   init_ros_nodes();
 
   // Set to default values
   init_joint_state_values(LINK1_LENGTH_MM, LINK2_LENGTH_MM);
 
   // Init Kalman filter and configure first values
-  KF_2DOF_init(&joint_state_kalman_filter, KALMAN_DT_MS, LINK1_LENGTH_MM,
-               LINK2_LENGTH_MM, KALMAN_Q_NOISE, KALMAN_R_NOISE);
-  init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
-  calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
-
-  // For both motors in encoder_a
-  init_encoder_interrupt();
+  // KF_2DOF_init(&joint_state_kalman_filter, KALMAN_DT_MS, LINK1_LENGTH_MM,
+  //              LINK2_LENGTH_MM, KALMAN_Q_NOISE, KALMAN_R_NOISE);
+  // init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
+  // calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
 }
 
 void loop() {
   static uint8_t iter = 0;
   while (1) {
-    // TODO check this works
-    if (rcl_take(&_control_law_subscriber, &_control_law_msg,
-                 &_control_law_msg_info, NULL) == RCL_RET_OK) {
-      control_motor1(_control_law_msg.data.data[0]);
-      control_motor2(_control_law_msg.data.data[1]);
-    }
+    RCCHECK(rclc_executor_spin_some(&_executor, 10));
 
     joint_state_callback();
-
-    DEBUG_CHECKPOINT(iter++);
-    sleep_ms(1000);
   }
 }

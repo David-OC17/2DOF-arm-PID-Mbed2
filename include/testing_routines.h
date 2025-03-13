@@ -70,7 +70,6 @@ void TEST_encoder_count_print() {
   init_spi();
   stdio_init_all();
 
-  // Init motors with their interrupts for encoders
   motor1.pwm = MOTOR1_PWM;
   motor1.dir1 = MOTOR1_DIR1;
   motor1.dir2 = MOTOR1_DIR2;
@@ -102,7 +101,8 @@ void TEST_encoder_count_print() {
   rclc_support_init(&_test_support, 0, NULL, &_test_allocator);
 
   // Create node
-  RCCHECK(rclc_node_init_default(&_test_node, "_test_encoder_node", "", &_test_support));
+  RCCHECK(rclc_node_init_default(&_test_node, "_test_encoder_node", "",
+                                 &_test_support));
 
   std_msgs__msg__Int32MultiArray__init(&_encoder_pos_msg);
   _encoder_pos_msg.data.data = (int32_t *)malloc(sizeof(int32_t) * 2);
@@ -119,32 +119,18 @@ void TEST_encoder_count_print() {
                              &_test_allocator));
 
   while (1) {
-      _encoder_pos_msg.data.data[0] = motor1.encoder_pos;
-      _encoder_pos_msg.data.data[1] = motor2.encoder_pos;
+    _encoder_pos_msg.data.data[0] = motor1.encoder_pos;
+    _encoder_pos_msg.data.data[1] = motor2.encoder_pos;
 
-      RCSOFTCHECK(rcl_publish(&_encoder_pos_publisher, &_encoder_pos_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&_encoder_pos_publisher, &_encoder_pos_msg, NULL));
 
-      DEBUG_CHECKPOINT(99);
+    DEBUG_CHECKPOINT(99);
   }
 }
 
 void TEST_voltage_control_ros_subscribe() {
   init_spi();
   stdio_init_all();
-
-  motor1.pwm = MOTOR1_PWM;
-  motor1.dir1 = MOTOR1_DIR1;
-  motor1.dir2 = MOTOR1_DIR2;
-  motor1.encoder_a = MOTOR1_ENCODERA;
-  motor1.encoder_b = MOTOR1_ENCODERB;
-  init_motor(motor1);
-
-  motor2.pwm = MOTOR2_PWM;
-  motor2.dir1 = MOTOR2_DIR1;
-  motor2.dir2 = MOTOR2_DIR2;
-  motor2.encoder_a = MOTOR2_ENCODERA;
-  motor2.encoder_b = MOTOR2_ENCODERB;
-  init_motor(motor2);
 
   rmw_uros_set_custom_transport(
       true, NULL, pico_serial_transport_open, pico_serial_transport_close,
@@ -157,17 +143,30 @@ void TEST_voltage_control_ros_subscribe() {
     error_loop();
   }
 
-  init_encoder_interrupt();
-  init_ros_nodes();
+  _allocator = rcl_get_default_allocator();
+  rclc_support_init(&_support, 0, NULL, &_allocator);
 
-  // For both motors in encoder_a
-  static uint8_t iter = 0;
+  RCCHECK(rclc_node_init_default(&_node, "control_law_node", "", &_support));
+
+  std_msgs__msg__Float32MultiArray__init(&_control_law_msg);
+
+  _control_law_msg.data.data =
+      (float *)malloc(sizeof(float) * CONTROL_LAW_MSG_ARRAY_SIZE);
+  _control_law_msg.data.size = CONTROL_LAW_MSG_ARRAY_SIZE;
+  _control_law_msg.data.capacity = CONTROL_LAW_MSG_ARRAY_SIZE;
+
+  RCCHECK(rclc_subscription_init_default(
+      &_control_law_subscriber, &_node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+      "control_law_topic"));
+
+  RCCHECK(rclc_executor_init(&_executor, &_support.context, 1, &_allocator));
+
+  RCCHECK(rclc_executor_add_subscription(&_executor, &_control_law_subscriber,
+                                         &_control_law_msg,
+                                         &control_law_callback, ON_NEW_DATA));
+
   while (1) {
-    if (rcl_take(&_control_law_subscriber, &_control_law_msg,
-                 &_control_law_msg_info, NULL) == RCL_RET_OK) {
-      control_motor1(_control_law_msg.data.data[0]);
-      control_motor2(_control_law_msg.data.data[1]);
-    }
-    sleep_ms(1000);
+    RCCHECK(rclc_executor_spin_some(&_executor, 100));
   }
 }

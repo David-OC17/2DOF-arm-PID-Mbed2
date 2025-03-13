@@ -39,9 +39,8 @@ void control_law_callback(const void *msgin) {
   const std_msgs__msg__Float32MultiArray *control_voltages =
       (const std_msgs__msg__Float32MultiArray *)msgin;
 
-  DEBUG_SUBSCRIBER_PRINT();
+  DEBUG_CHECKPOINT(1);
 
-  // Apply new voltages (new PWM)
   control_motor1(control_voltages->data.data[0]);
   control_motor2(control_voltages->data.data[1]);
 }
@@ -57,8 +56,9 @@ void control_motor1(float volt) {
     gpio_put(motor1.dir1, false);
     gpio_put(motor1.dir2, true);
   }
-  const int16_t duty_cycle = 0; // TODO calculate duty cycle
+  const int16_t duty_cycle = 255/4; // TODO calculate duty cycle
   pwm_set_gpio_level(motor1.pwm, duty_cycle);
+  sleep_ms(1);
 }
 
 void control_motor2(float volt) {
@@ -71,6 +71,7 @@ void control_motor2(float volt) {
     gpio_put(motor1.dir1, false);
     gpio_put(motor1.dir2, true);
   }
-  const int16_t duty_cycle = 0; // TODO calculate duty cycle
+  const int16_t duty_cycle = 255/4; // TODO calculate duty cycle
   pwm_set_gpio_level(motor1.pwm, duty_cycle);
+  sleep_ms(1);
 }

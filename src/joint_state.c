@@ -8,8 +8,8 @@ end_efector_state _estimated_end_efector_state;
 joint_state take_measurement_encoders() {
   joint_state temp_state;
 
-  temp_state._joint1_theta = clicks2angle((uint16_t)motor1.encoder_pos);
-  temp_state._joint2_theta = clicks2angle((uint16_t)motor2.encoder_pos);
+  temp_state._joint1_theta = clicks2angle(motor1.encoder_pos);
+  temp_state._joint2_theta = clicks2angle(motor2.encoder_pos);
 
   return temp_state;
 }
@@ -63,10 +63,8 @@ void calibrate_joint_state_kalman(uint8_t iterations) {
 
 /* Encoder interrupts */
 void init_encoder_interrupt() {
-  uint32_t event_mask = GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE;
-
   gpio_set_irq_enabled_with_callback(motor1.encoder_a,
-                                     event_mask,
+                                     GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
                                      true, &update_encoder_motor);
 }
 
@@ -92,32 +90,37 @@ void update_encoder_motor(uint gpio, uint32_t events) {
 void joint_state_callback() {
   _measured_joint_state = take_measurement_encoders();
 
-  KF_2DOF_update(&joint_state_kalman_filter,
-                 _measured_joint_state._joint1_theta,
-                 _measured_joint_state._joint2_theta);
-  KF_2DOF_predict(&joint_state_kalman_filter);
+  // KF_2DOF_update(&joint_state_kalman_filter,
+  //                _measured_joint_state._joint1_theta,
+  //                _measured_joint_state._joint2_theta);
+  // KF_2DOF_predict(&joint_state_kalman_filter);
 
-  // Update position
-  _estimated_end_efector_state._pos_x =
-      KF_2DOF_getX(&joint_state_kalman_filter);
-  _estimated_end_efector_state._pos_y =
-      KF_2DOF_getY(&joint_state_kalman_filter);
+  // // Update position
+  // _estimated_end_efector_state._pos_x =
+  //     KF_2DOF_getX(&joint_state_kalman_filter);
+  // _estimated_end_efector_state._pos_y =
+  //     KF_2DOF_getY(&joint_state_kalman_filter);
 
-  // Update velocity
-  _estimated_end_efector_state._vel_x =
-      KF_2DOF_getVX(&joint_state_kalman_filter);
-  _estimated_end_efector_state._vel_y =
-      KF_2DOF_getVY(&joint_state_kalman_filter);
+  // // Update velocity
+  // _estimated_end_efector_state._vel_x =
+  //     KF_2DOF_getVX(&joint_state_kalman_filter);
+  // _estimated_end_efector_state._vel_y =
+  //     KF_2DOF_getVY(&joint_state_kalman_filter);
 
-  // Update ROS msg and publish
-  _joint_state_msg.data.data[0] = _estimated_end_efector_state._pos_x;
-  _joint_state_msg.data.data[1] = _estimated_end_efector_state._pos_y;
+  // // Update ROS msg and publish
+  // _joint_state_msg.data.data[0] = _estimated_end_efector_state._pos_x;
+  // _joint_state_msg.data.data[1] = _estimated_end_efector_state._pos_y;
 
-  _joint_state_msg.data.data[2] = _estimated_end_efector_state._vel_x;
-  _joint_state_msg.data.data[3] = _estimated_end_efector_state._vel_y;
+  // _joint_state_msg.data.data[2] = _estimated_end_efector_state._vel_x;
+  // _joint_state_msg.data.data[3] = _estimated_end_efector_state._vel_y;
+
+  _joint_state_msg.data.data[0] = (float)motor1.encoder_pos;
+  _joint_state_msg.data.data[1] = (float)motor2.encoder_pos;
+
+  _joint_state_msg.data.data[2] = _joint_state_msg.data.data[2] + 3;
+  _joint_state_msg.data.data[3] = _joint_state_msg.data.data[3] + 4;
 
   RCSOFTCHECK(rcl_publish(&_joint_state_publisher, &_joint_state_msg, NULL));
-  DEBUG_PUBLISHER_PRINT();
 }
 
 /* Init joint state to stationary and horizontal right*/

@@ -28,6 +28,7 @@ target_link_libraries(2dof_arm_pid_mbed2
     hardware_irq
     hardware_clocks
     hardware_spi
+    # arm_math
 )
 
 target_include_directories(2dof_arm_pid_mbed2 PUBLIC

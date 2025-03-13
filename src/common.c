@@ -15,8 +15,8 @@ std_msgs__msg__Float32MultiArray _control_law_msg;
 rcl_publisher_t _joint_state_publisher;
 std_msgs__msg__Float32MultiArray _joint_state_msg;
 
-const float clicks2angle(uint16_t clicks) {
-  return (float)(clicks * (uint16_t)360 / (uint16_t)ENCODER_REVS_PER_ROT);
+const float clicks2angle(int32_t clicks) {
+  return (float)(clicks * (int32_t)360 / (int32_t)ENCODER_REVS_PER_ROT);
 }
 
 const int16_t angle2clicks(float angle) {
@@ -67,6 +67,8 @@ void print_debug_subscriber() {
              volt_1, volt_2);
 
     spi_write_read_blocking(spi_default, debug_print_subscriber_buf, debug_response_buf, DEBUG_PRINT_SUBSCRIBER_BUF_LEN);
+
+    DEBUG_CHECKPOINT(1);
 }
 
 void error_loop() {
@@ -77,9 +79,6 @@ void error_loop() {
     sleep_ms(200);
   }
 }
-
-#define CONTROL_LAW_MSG_ARRAY_SIZE 2
-#define JOINT_STATE_MSG_ARRAY_SIZE 4
 
 void init_ros_nodes() {
   _allocator = rcl_get_default_allocator();
