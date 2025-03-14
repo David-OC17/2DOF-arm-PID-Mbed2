@@ -37,6 +37,7 @@ target_include_directories(2dof_arm_pid_mbed2 PUBLIC
     include/
     ${CMSIS_PATH}/CMSIS-DSP/Include
     ${CMSIS_PATH}/CMSIS_6/CMSIS/Core/Include/
+    /home/david/builds/pico-sdk/src/common/pico_base_headers/include/
 )
 
 # Optimize binary size
