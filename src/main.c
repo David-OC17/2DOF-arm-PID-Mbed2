@@ -10,10 +10,10 @@ int main() {
   // TEST_pwm_output();
   // TEST_encoder_count_print();
   // TEST_voltage_control_ros_subscribe();
-  TEST_kf_generic_update();
+  // TEST_kf_generic_update();
 
-  // setup();
-  // loop();
+  setup();
+  loop();
 
   return 0;
 }
@@ -36,6 +36,9 @@ void setup() {
   motor2.encoder_b = MOTOR2_ENCODERB;
   init_motor(motor2);
 
+  control_motor1(0);
+  control_motor2(0);
+
   rmw_uros_set_custom_transport(
       true, NULL, pico_serial_transport_open, pico_serial_transport_close,
       pico_serial_transport_write, pico_serial_transport_read);
@@ -52,11 +55,11 @@ void setup() {
   init_ros_nodes();
 
   // Set to default values
-  init_joint_state_values(LINK1_LENGTH_MM, LINK2_LENGTH_MM);
+  init_joint_state_values();
 
   // Init Kalman filter and configure first values
   init_joint_state_kalman(ENCODER1_INITAL_POS_DEG, ENCODER2_INITAL_POS_DEG);
-  calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
+  // calibrate_joint_state_kalman(CALIBRATE_KALMAN_ITERS);
 }
 
 void loop() {

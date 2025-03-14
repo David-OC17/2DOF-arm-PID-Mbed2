@@ -39,10 +39,10 @@ void control_law_callback(const void *msgin) {
   const std_msgs__msg__Float32MultiArray *control_voltages =
       (const std_msgs__msg__Float32MultiArray *)msgin;
 
-  DEBUG_CHECKPOINT(1);
-
   control_motor1(control_voltages->data.data[0]);
   control_motor2(control_voltages->data.data[1]);
+
+  DEBUG_CHECKPOINT(99);
 }
 
 /* Call to motor driver action */

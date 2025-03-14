@@ -18,7 +18,7 @@ extern full_joint_state _approximate_joint_state;
 
 joint_state take_measurement_encoders();
 
-void init_joint_state_values(float link1_len, float link2_len);
+void init_joint_state_values();
 void init_joint_state_kalman(float encoder1_init_pos, float encoder2_init_pos);
 void calibrate_joint_state_kalman(uint8_t iterations);
 
