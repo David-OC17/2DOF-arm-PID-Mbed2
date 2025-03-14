@@ -11,6 +11,7 @@
 #include "common.h"
 #include "control_law.h"
 #include "joint_state.h"
+#include "kf_2dof.h"
 
 #include <std_msgs/msg/int32_multi_array.h>
 
@@ -24,6 +25,7 @@ rcl_publisher_t _encoder_pos_publisher;
 void TEST_pwm_output();
 void TEST_encoder_count_print();
 void TEST_voltage_control_ros_subscribe();
+void TEST_kf_generic_update();
 
 /* Test that the GPIO can output a good PWM to both motors */
 void TEST_pwm_output() {
@@ -168,5 +170,47 @@ void TEST_voltage_control_ros_subscribe() {
 
   while (1) {
     RCCHECK(rclc_executor_spin_some(&_executor, 100));
+  }
+}
+
+void TEST_kf_generic_update() {
+  init_spi();
+  stdio_init_all();
+
+  sleep_ms(10000);
+
+  KF_Init(&_joint1_kalman_filter);
+
+  _joint1_kalman_filter.x_hat_prev_data[0] = 5;  // pos
+  _joint1_kalman_filter.x_hat_prev_data[1] = -2; // vel
+
+  // clang-format off
+  _joint1_kalman_filter.P_hat_prev_data[0] = 0.3; _joint1_kalman_filter.P_hat_prev_data[1] = 0.0;
+  _joint1_kalman_filter.P_hat_prev_data[2] = 0.0; _joint1_kalman_filter.P_hat_prev_data[3] = 0.01;
+  // clang-format on
+
+  const float32_t control = 3;      // volt
+  const float32_t measurement = 5.5; // z pos
+
+  KF_Update(&_joint1_kalman_filter, control, measurement);
+
+  const float pos = KF_get_pos_estimate(&_joint1_kalman_filter);
+  const float vel = KF_get_vel_estimate(&_joint1_kalman_filter);
+  const float32_t *p_res = KF_get_covariance_mat(&_joint1_kalman_filter);
+
+  while (1) {
+    printf("Before Update:\n");
+    printf("  Position Estimate: %.4f\n",
+           _joint1_kalman_filter.x_hat_prev_data[0]);
+    printf("  Velocity Estimate: %.4f\n",
+           _joint1_kalman_filter.x_hat_prev_data[1]);
+
+    printf("After Update:\n");
+    printf("  Position Estimate: %.4f\n", pos);
+    printf("  Velocity Estimate: %.4f\n", vel);
+    printf("  Covariance Matrix:\n");
+    printf("    [ %.4f  %.4f ]\n", p_res[0], p_res[1]);
+    printf("    [ %.4f  %.4f ]\n", p_res[2], p_res[3]);
+    sleep_ms(1000);
   }
 }

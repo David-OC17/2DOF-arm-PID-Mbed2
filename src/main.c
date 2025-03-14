@@ -10,9 +10,10 @@ int main() {
   // TEST_pwm_output();
   // TEST_encoder_count_print();
   // TEST_voltage_control_ros_subscribe();
+  TEST_kf_generic_update();
 
-  setup();
-  loop();
+  // setup();
+  // loop();
 
   return 0;
 }
