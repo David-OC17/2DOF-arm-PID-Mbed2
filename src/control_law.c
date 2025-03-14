@@ -26,7 +26,7 @@ void init_motor(motor m) {
   gpio_disable_pulls(m.encoder_b);
 
   pwm_config config = pwm_get_default_config();
-  pwm_config_set_clkdiv(&config, 4.0f); // TODO review clkdiv
+  pwm_config_set_clkdiv(&config, 4.0f);
   pwm_config_set_wrap(&config, 255);
 
   pwm_init(slice_num, &config, true);
@@ -39,57 +39,27 @@ void control_law_callback(const void *msgin) {
   const std_msgs__msg__Float32MultiArray *control_voltages =
       (const std_msgs__msg__Float32MultiArray *)msgin;
 
-  control_motor1(control_voltages->data.data[0]);
-  control_motor2(control_voltages->data.data[1]);
-
-  DEBUG_CHECKPOINT(99);
+  control_motor1(control_voltages->data.data[1]);
+  control_motor2(control_voltages->data.data[0]);
 }
 
 /* Call to motor driver action */
 void control_motor1(float volt) {
-  if (volt < -200 || volt > 200) {
-    if (volt < 0) { // Negative rotation
-      gpio_put(motor1.dir1, false);
-      gpio_put(motor1.dir2, true);
-      pwm_set_gpio_level(motor1.pwm, 255);
-    } else {
-      gpio_put(motor1.dir1, true);
-      gpio_put(motor1.dir2, false);
-      pwm_set_gpio_level(motor1.pwm, 255);
-    }
-  } else {
-    bool sign = volt < 0 ? 0 : 1;
-    volt = abs(volt);
+  bool sign = volt < 0 ? 0 : 1;
+  volt = abs(volt);
 
-    gpio_put(motor1.dir1, sign);
-    gpio_put(motor1.dir2, !sign);
+  gpio_put(motor1.dir1, sign);
+  gpio_put(motor1.dir2, !sign);
 
-    uint16_t duty_cycle = volt / 200 * 255;
-    pwm_set_gpio_level(motor1.pwm, duty_cycle);
-  }
-  sleep_ms(1);
+  pwm_set_gpio_level(motor1.pwm, volt);
 }
 
 void control_motor2(float volt) {
-  if (volt < -200 || volt > 200) {
-    if (volt < 0) { // Negative rotation
-      gpio_put(motor2.dir1, false);
-      gpio_put(motor2.dir2, true);
-      pwm_set_gpio_level(motor2.pwm, 255);
-    } else {
-      gpio_put(motor2.dir1, true);
-      gpio_put(motor2.dir2, false);
-      pwm_set_gpio_level(motor2.pwm, 255);
-    }
-  } else {
-    bool sign = volt < 0 ? 0 : 1;
-    volt = abs(volt);
+  bool sign = volt < 0 ? 0 : 1;
+  volt = abs(volt);
 
-    gpio_put(motor2.dir1, sign);
-    gpio_put(motor2.dir2, !sign);
+  gpio_put(motor2.dir1, sign);
+  gpio_put(motor2.dir2, !sign);
 
-    uint16_t duty_cycle = volt / 200 * 255;
-    pwm_set_gpio_level(motor2.pwm, duty_cycle);
-  }
-  sleep_ms(1);
+  pwm_set_gpio_level(motor2.pwm, volt);
 }

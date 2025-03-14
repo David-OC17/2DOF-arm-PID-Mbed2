@@ -40,17 +40,16 @@ void calibrate_joint_state_kalman(uint8_t iterations) {
   float sign = -1.0;
 
   for (uint8_t i = 0; i < iterations; i++) {
-    // TODO change this input voltages
-    control_motor1(sign * MIN2MOVE_MOTOR_VOLT);
-    control_motor2(-sign * MIN2MOVE_MOTOR_VOLT);
-    sleep_ms(50);
+    control_motor1(sign * 100);
+    control_motor2(-sign * 100);
+    sleep_ms(100);
 
     _measured_joint_state = take_measurement_encoders();
 
-    KF_Update(&_joint1_kalman_filter, _control_law_msg.data.data[0],
-              _measured_joint_state.joint2_theta);
+    KF_Update(&_joint1_kalman_filter, 100,
+              _measured_joint_state.joint1_theta);
 
-    KF_Update(&_joint2_kalman_filter, _control_law_msg.data.data[1],
+    KF_Update(&_joint2_kalman_filter, 100,
               _measured_joint_state.joint2_theta);
 
     sign *= -1;
@@ -125,8 +124,6 @@ void joint_state_callback() {
   _joint_state_msg.data.data[3] = _approximate_joint_state.joint2_omega;
 
   RCSOFTCHECK(rcl_publish(&_joint_state_publisher, &_joint_state_msg, NULL));
-
-  DEBUG_CHECKPOINT(11);
 }
 
 /* Init joint state to stationary and horizontal right*/

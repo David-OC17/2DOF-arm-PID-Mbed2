@@ -48,12 +48,20 @@ static void print_matrix_f32(const arm_matrix_instance_f32 *mat, const char *nam
 //     [ 0  1 ]
 
 static const float T = 0.1;
-static const float b = 1;
-static const float J = 1;
-static const float K = 1;
+static const float b = 0.0026829;
+static const float J = 0.00048115;
+static const float K = 0.22076;
 static const float q_theta = 0.01;
 static const float q_theta_dot = 0.01;
 static const float R = 0.1;
+
+// static const float T = 0.1;
+// static const float b = 1;
+// static const float J = 1;
+// static const float K = 1;
+// static const float q_theta = 0.01;
+// static const float q_theta_dot = 0.01;
+// static const float R = 0.1;
 
 typedef struct {
   arm_matrix_instance_f32 x_hat_prev;
@@ -148,16 +156,10 @@ static void KF_Update(KF_2DOF_t *kf, float32_t u_prev, float32_t Z_k) {
   arm_mat_mult_f32(&temp1, &temp2, &P_check);        // F * P_hat_prev * F^T
   arm_mat_add_f32(&P_check, &kf->Q, &P_check);       // F * P_hat_prev * F^T + Q
 
-  print_matrix_f32(&P_check, "p_check");
-
   // K_k = P_check_k * H^T * (H * P_check_k * H^T + 0.01)^(-1)
   arm_mat_mult_f32(&P_check, &kf->H_transposed, &numerator); // P_check_k * H^T
   arm_mat_mult_f32(&kf->H, &P_check, &temp_H_P);             // H * P_check_k
   arm_mat_mult_f32(&temp_H_P, &kf->H_transposed, &HPH);      // H * P_check_k * H^T
-
-  print_matrix_f32(&kf->H, "Kalman");
-
-  print_matrix_f32(&HPH, "HPH");
 
   float32_t denominator = HPH_data[0] + R;                    // (...) + 0.01
   denominator = (denominator < 1e-6f) ? 1e-6f : denominator;  // Avoid division by zero
@@ -169,14 +171,11 @@ static void KF_Update(KF_2DOF_t *kf, float32_t u_prev, float32_t Z_k) {
   arm_mat_scale_f32(&K_gain, residual, &K_times_residual); // K_k * (Z_k - H * x_check_k)
   arm_mat_add_f32(&x_check, &K_times_residual, &x_hat);    // x_check_k + K_k * (Z_k - H * x_check_k)
 
-  print_matrix_f32(&x_hat, "x_hat");
-
   // P_hat_k = (I - K_k * H) * P_check_k
   arm_mat_mult_f32(&K_gain, &kf->H, &KH);          // K_k * H
   arm_mat_sub_f32(&kf->I, &KH, &I_minus_KH);       // (I - K_k * H)
   arm_mat_mult_f32(&I_minus_KH, &P_check, &P_hat); // (I - K_k * H) * P_check_k
 
-  print_matrix_f32(&P_hat, "P_hat");
   // clang-format on
 }
 

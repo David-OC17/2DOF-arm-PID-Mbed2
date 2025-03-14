@@ -15,8 +15,9 @@ std_msgs__msg__Float32MultiArray _control_law_msg;
 rcl_publisher_t _joint_state_publisher;
 std_msgs__msg__Float32MultiArray _joint_state_msg;
 
+/* Converts number of clicks into angle in deg*/
 const float clicks2angle(int32_t clicks) {
-  return (float)(clicks * (int32_t)360 / (int32_t)ENCODER_REVS_PER_ROT);
+  return (float)((float)clicks * 360 / (float)ENCODER_REVS_PER_ROT);
 }
 
 const int16_t angle2clicks(float angle) {
@@ -105,13 +106,13 @@ void init_ros_nodes() {
   RCCHECK(rclc_publisher_init_default(
       &_joint_state_publisher, &_node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-      "joint_state_topic"));
+      "joint_state"));
 
   // Create subscriber
   RCCHECK(rclc_subscription_init_default(
       &_control_law_subscriber, &_node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-      "control_law_topic"));
+      "control_law"));
 
   // Init executor for 2 nodes
   RCCHECK(rclc_executor_init(&_executor, &_support.context, 2, &_allocator));

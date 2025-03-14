@@ -23,6 +23,7 @@ std_msgs__msg__Int32MultiArray _encoder_pos_msg;
 rcl_publisher_t _encoder_pos_publisher;
 
 void TEST_pwm_output();
+void TEST_control_motor();
 void TEST_encoder_count_print();
 void TEST_voltage_control_ros_subscribe();
 void TEST_kf_generic_update();
@@ -64,6 +65,39 @@ void TEST_pwm_output() {
     pwm_set_gpio_level(motor2.pwm, MAX_DUTY_CYCLE / 2);
     sleep_ms(10);
 
+    dir = !dir;
+  }
+}
+
+void TEST_control_motor() {
+  init_spi();
+  stdio_init_all();
+
+  // Init motors with their interrupts for encoders
+  motor1.pwm = MOTOR1_PWM;
+  motor1.dir1 = MOTOR1_DIR1;
+  motor1.dir2 = MOTOR1_DIR2;
+  motor1.encoder_a = MOTOR1_ENCODERA;
+  motor1.encoder_b = MOTOR1_ENCODERB;
+  init_motor(motor1);
+
+  motor2.pwm = MOTOR2_PWM;
+  motor2.dir1 = MOTOR2_DIR1;
+  motor2.dir2 = MOTOR2_DIR2;
+  motor2.encoder_a = MOTOR2_ENCODERA;
+  motor2.encoder_b = MOTOR2_ENCODERB;
+  init_motor(motor2);
+
+  const float MAX_DUTY_CYCLE_ABS = 200;
+  float dir = 1;
+  float duty_cycle1 = 70;
+  float duty_cycle2 = 70;
+
+  while (1) {
+    control_motor1(dir * duty_cycle1);
+    control_motor2(dir * duty_cycle2);
+
+    sleep_ms(10);
     dir = !dir;
   }
 }
@@ -189,7 +223,7 @@ void TEST_kf_generic_update() {
   _joint1_kalman_filter.P_hat_prev_data[2] = 0.0; _joint1_kalman_filter.P_hat_prev_data[3] = 0.01;
   // clang-format on
 
-  const float32_t control = 3;      // volt
+  const float32_t control = 3;       // volt
   const float32_t measurement = 5.5; // z pos
 
   KF_Update(&_joint1_kalman_filter, control, measurement);

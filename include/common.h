@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "hardware/pwm.h"
+#include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include "pico/stdlib.h"
